@@ -1,13 +1,8 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from sklearn import datasets, linear_model
+import numpy as np  
+from sklearn import neighbors
 
-def get_data(file_name):
-	data = pd.read_csv(file_name)
-	X_parameter = []
-	Y_parameter = []
-	for single_square_feet ,single_price_value in zip(data['square_feet'],data['price']):
-		X_parameter.append([float(single_square_feet)])
-		Y_parameter.append(float(single_price_value))
-	return X_parameter,Y_parameter
+knn = neighbors.KNeighborsClassifier()
+data = np.array([[3,104],[2,100],[1,81],[101,10],[99,5],[98,2]])
+labels = np.array([1,1,1,2,2,2])
+knn.fit(data,labels)
+knn.predict([18,90])  
