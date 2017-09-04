@@ -9,7 +9,8 @@ import sklearn.preprocessing as preprocessing
 from pandas import Series,DataFrame
 from sklearn.ensemble import RandomForestRegressor
 from sklearn import linear_model
-
+from sklearn import cross_validation
+from sklearn.ensemble import BaggingRegressor
 def print_basic_info():
     fig = plt.figure()
     fig.set(alpha=0.2)  # 设定图表颜色alpha参数
@@ -141,8 +142,8 @@ y = train_np[:, 0]
 # X即特征属性值
 X = train_np[:, 1:]
 # fit到LogisticRegression之中
-clf = linear_model.LogisticRegression(C=1.0, penalty='l1', tol=1e-6)
-clf.fit(X, y)
+lr = linear_model.LogisticRegression(C=1.0, penalty='l1', tol=1e-6)
+lr.fit(X, y)
 
 #同样处理test数据
 data_test = pd.read_csv("./test.csv")
@@ -172,7 +173,43 @@ df_test['Fare_scaled'] = scaler.fit_transform(reshape_fare, scaler.fit(reshape_f
 
 df_test_f = df_test.filter(regex='Survived|Age_.*|SibSp|Parch|Fare_.*|Cabin_.*|Embarked_.*|Sex_.*|Pclass_.*')
 
+'''
 #预测
 predictions = clf.predict(df_test_f)
 result = pd.DataFrame({'PassengerId':data_test['PassengerId'].as_matrix(), 'Survived':predictions.astype(np.int32)})
 result.to_csv("./result.csv", index=False)
+
+#分析优化
+print pd.DataFrame({"columns":list(data_train_f.columns)[1:], "coef":list(lr.coef_.T)})
+
+#交叉验证
+X = data_train_f.as_matrix()[:,1:]
+Y = data_train_f.as_matrix()[:,0]
+print cross_validation.cross_val_score(lr, X, Y, cv=5)
+
+
+# 分割数据，按照 训练数据:cv数据 = 7:3的比例
+split_train, split_cv = cross_validation.train_test_split(data_train, test_size=0.3, random_state=0)
+train_df = split_train.filter(regex='Survived|Age_.*|SibSp|Parch|Fare_.*|Cabin_.*|Embarked_.*|Sex_.*|Pclass_.*')
+# 生成模型
+lr = linear_model.LogisticRegression(C=1.0, penalty='l1', tol=1e-6)
+lr.fit(train_df.as_matrix()[:,1:], train_df.as_matrix()[:,0])
+# 对cross validation数据进行预测
+cv_df = split_cv.filter(regex='Survived|Age_.*|SibSp|Parch|Fare_.*|Cabin_.*|Embarked_.*|Sex_.*|Pclass_.*')
+predictions = lr.predict(cv_df.as_matrix()[:,1:])
+bad_cases = data_train.loc[data_train['PassengerId'].isin(split_cv[predictions != cv_df.as_matrix()[:,0]]['PassengerId'].values)]
+print bad_cases
+
+# y即Survival结果
+y = train_np[:, 0]
+# X即特征属性值
+X = train_np[:, 1:]
+# fit到BaggingRegressor之中
+lr = linear_model.LogisticRegression(C=1.0, penalty='l1', tol=1e-6)
+bagging_lr = BaggingRegressor(lr, n_estimators=20, max_samples=0.8, max_features=1.0, bootstrap=True, bootstrap_features=False)
+bagging_lr.fit(X, y)
+
+predictions = bagging_lr.predict(df_test_f)
+result = pd.DataFrame({'PassengerId':data_test['PassengerId'].as_matrix(), 'Survived':predictions.astype(np.int32)})
+result.to_csv("./result2.csv", index=False)
+'''
