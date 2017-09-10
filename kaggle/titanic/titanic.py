@@ -133,6 +133,8 @@ reshape_fare = data_train_c['Fare'].reshape(-1,1)
 data_train_c['Age_scaled'] = scaler.fit_transform(reshape_age, scaler.fit(reshape_age))
 data_train_c['Fare_scaled'] = scaler.fit_transform(reshape_fare, scaler.fit(reshape_fare))
 
+print data_train_c
+
 # 用正则取出我们要的属性值
 data_train_f = data_train_c.filter(regex='Survived|Age_.*|SibSp|Parch|Fare_.*|Cabin_.*|Embarked_.*|Sex_.*|Pclass_.*')
 
@@ -173,20 +175,18 @@ df_test['Fare_scaled'] = scaler.fit_transform(reshape_fare, scaler.fit(reshape_f
 
 df_test_f = df_test.filter(regex='Survived|Age_.*|SibSp|Parch|Fare_.*|Cabin_.*|Embarked_.*|Sex_.*|Pclass_.*')
 
-'''
 #预测
-predictions = clf.predict(df_test_f)
+predictions = lr.predict(df_test_f)
 result = pd.DataFrame({'PassengerId':data_test['PassengerId'].as_matrix(), 'Survived':predictions.astype(np.int32)})
 result.to_csv("./result.csv", index=False)
 
 #分析优化
-print pd.DataFrame({"columns":list(data_train_f.columns)[1:], "coef":list(lr.coef_.T)})
+#print pd.DataFrame({"columns":list(data_train_f.columns)[1:], "coef":list(lr.coef_.T)})
 
 #交叉验证
 X = data_train_f.as_matrix()[:,1:]
 Y = data_train_f.as_matrix()[:,0]
-print cross_validation.cross_val_score(lr, X, Y, cv=5)
-
+#print cross_validation.cross_val_score(lr, X, Y, cv=5)
 
 # 分割数据，按照 训练数据:cv数据 = 7:3的比例
 split_train, split_cv = cross_validation.train_test_split(data_train, test_size=0.3, random_state=0)
@@ -199,7 +199,7 @@ cv_df = split_cv.filter(regex='Survived|Age_.*|SibSp|Parch|Fare_.*|Cabin_.*|Emba
 predictions = lr.predict(cv_df.as_matrix()[:,1:])
 bad_cases = data_train.loc[data_train['PassengerId'].isin(split_cv[predictions != cv_df.as_matrix()[:,0]]['PassengerId'].values)]
 print bad_cases
-
+'''
 # y即Survival结果
 y = train_np[:, 0]
 # X即特征属性值
