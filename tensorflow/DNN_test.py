@@ -21,7 +21,7 @@ pre_act2 = tf.matmul(f1, w2) + b2
 f2 = tf.nn.relu(pre_act2, name='f2')
 
 loss = tf.reduce_sum(tf.pow(pre_act2-Y, 2))
-train_step = tf.train.GradientDescentOptimizer(lr).minimize(loss)
+train_step = tf.train.AdamOptimizer(lr).minimize(loss)
 
 train_X=[[0,0],[0,1],[1,0],[1,1]]
 train_Y=[[0],[1],[1],[0]]
